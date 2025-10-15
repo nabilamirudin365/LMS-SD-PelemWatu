@@ -35,6 +35,12 @@
         @endauth
         
         @if(Auth::user()->role == 'guru')
+          <a href="{{ route('users.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:font-semibold">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zm-3 2a5 5 0 00-5 5v1h10v-1a5 5 0 00-5-5zM13 6a3 3 0 116 0 3 3 0 01-6 0zm-3 2a5 5 0 00-4.545 3.372A3.989 3.989 0 0115 11.586V14h4v-1a5 5 0 00-5-5h-2.545z"></path>
+          </svg>
+          <span>Kelola Akun</span>
+          </a>
           <a href="{{ route('absensi.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:font-semibold">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path><path fill-rule="evenodd" d="M7 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>
             <span>Absensi</span>

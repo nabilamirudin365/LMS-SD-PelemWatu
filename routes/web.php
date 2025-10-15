@@ -10,6 +10,7 @@ use App\Http\Controllers\SoalKuisController;
 use App\Http\Controllers\KuisSiswaController;
 use App\Http\Controllers\PenilaianController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
 
 // Route::get('/', function () {
 //     return redirect()->route('login');
@@ -38,6 +39,8 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'guru'])->prefix('guru')->group(function () {
+
+    Route::resource('users', UserController::class);
     /* manajemen absensi */
     Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi.index');
     Route::get('/absensi/create', [AbsensiController::class, 'create'])->name('absensi.create');

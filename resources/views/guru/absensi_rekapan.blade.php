@@ -3,89 +3,85 @@
 @section('title', 'Rekapan Absensi')
 
 @section('content')
-<div class="max-w-6xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
-  <h2 class="text-2xl font-bold text-indigo-800 mb-6">📊 Rekapan Absensi Sementara</h2>
+<div class="max-w-7xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
+    <h2 class="text-2xl font-bold text-indigo-800 mb-4">📊 Rekapan Absensi Bulanan</h2>
 
-  <form method="GET" action="{{ route('absensi.rekapan') }}" class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-    <div>
-      <label class="block text-sm font-semibold">Filter Kelas:</label>
-      <select name="kelas_id" class="w-full border rounded px-3 py-2">
-        <option value="">-- Semua Kelas --</option>
-        @foreach($kelasList as $kelas)
-          <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
-        @endforeach
-      </select>
-    </div>
-    <div>
-      <label class="block text-sm font-semibold">Bulan:</label>
-      <select name="bulan" class="w-full border rounded px-3 py-2">
-        @php
-          $bulanIndonesia = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-        @endphp
-        @for ($i = 1; $i <= 12; $i++)
-          <option value="{{ $i }}" {{ request('bulan') == $i ? 'selected' : '' }}>{{ $bulanIndonesia[$i - 1] }}</option>
-        @endfor
-      </select>
-    </div>
-    <div>
-      <label class="block text-sm font-semibold">Tahun:</label>
-      <select name="tahun" class="w-full border rounded px-3 py-2">
-        @for ($y = 2023; $y <= now()->year; $y++)
-          <option value="{{ $y }}" {{ request('tahun') == $y ? 'selected' : '' }}>{{ $y }}</option>
-        @endfor
-      </select>
-    </div>
-    <div class="flex items-end">
-      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow-md">🔍 Tampilkan</button>
-    </div>
-  </form>
-  <a href="{{ route('absensi.export', request()->query()) }}"
-   class="inline-block mb-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
-  📥 Ekspor ke Excel
-  </a>
+    {{-- Form Filter --}}
+    <form method="GET" action="{{ route('absensi.rekapan') }}" class="mb-6 p-4 bg-slate-50 rounded-lg flex items-end gap-4">
+        <div>
+            <label for="kelas_id" class="block font-semibold mb-1">Kelas</label>
+            <select name="kelas_id" id="kelas_id" class="w-full border rounded px-3 py-2">
+                <option value="">-- Pilih Kelas --</option>
+                @foreach($kelasList as $kelas)
+                <option value="{{ $kelas->id }}" {{ $kelas_id == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label for="bulan" class="block font-semibold mb-1">Bulan</label>
+            <select name="bulan" id="bulan" class="w-full border rounded px-3 py-2">
+                @for ($i = 1; $i <= 12; $i++)
+                <option value="{{ $i }}" {{ $bulan == $i ? 'selected' : '' }}>{{ \Carbon\Carbon::create()->month($i)->translatedFormat('F') }}</option>
+                @endfor
+            </select>
+        </div>
+        <div>
+            <label for="tahun" class="block font-semibold mb-1">Tahun</label>
+            <input type="number" name="tahun" value="{{ $tahun }}" class="w-full border rounded px-3 py-2">
+        </div>
+        <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow-md">Tampilkan</button>
+        @if($rekapData)
+          <a href="{{ route('absensi.export', ['kelas_id' => $kelas_id, 'bulan' => $bulan, 'tahun' => $tahun]) }}" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded shadow-md flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm2-1a1 1 0 00-1 1v1h14V5a1 1 0 00-1-1H4zM3 9v7h14V9H3z"></path></svg>
+            Ekspor Excel
+          </a>
+    @endif
+    </form>
 
-  <div class="overflow-x-auto">
-    <table class="min-w-full border border-gray-300">
-      <thead class="bg-indigo-100">
-        <tr>
-          <th class="px-4 py-2 text-left">Tanggal</th>
-          <th class="px-4 py-2 text-left">Nama Siswa</th>
-          <th class="px-4 py-2 text-left">Kelas</th>
-          <th class="px-4 py-2 text-center">Status</th>
-          <th class="px-4 py-2 text-left">Keterangan</th>
-        </tr>
-      </thead>
-      <tbody>
-        @forelse($rekapList as $rekap)
-        <tr class="border-b hover:bg-gray-50">
-          <td class="px-4 py-2">{{ $rekap->absensi->tanggal ?? '-' }}</td>
-          <td class="px-4 py-2">{{ $rekap->murid->name }}</td>
-          <td class="px-4 py-2">{{ $rekap->murid->kelas->first()->nama_kelas ?? '-' }}</td>
-          <td class="px-4 py-2 text-center">
-            <span class="inline-block px-3 py-1 text-sm rounded-full 
-              {{
-                $rekap->status == 'hadir' ? 'bg-green-100 text-green-800' :
-                ($rekap->status == 'izin' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')
-              }}">
-              {{ ucfirst($rekap->status) }}
-            </span>
-          </td>
-          <td class="px-4 py-2">{{ $rekap->keterangan }}</td>
-        </tr>
-        @empty
-        <tr>
-          <td colspan="5" class="text-center text-gray-500 py-4">Tidak ada data absensi.</td>
-        </tr>
-        @endforelse
-      </tbody>
-    </table>
-  </div>
-
-  <div class="mt-8">
-    <a href="{{ route('absensi.index') }}"
+    @if($rekapData)
+    <div class="overflow-x-auto">
+        <table class="w-full table-auto border border-gray-400 text-center text-sm">
+            <thead class="bg-slate-200 font-bold">
+                <tr>
+                    <th rowspan="2" class="border border-gray-400 p-2">No</th>
+                    <th rowspan="2" class="border border-gray-400 p-2">Nama Siswa</th>
+                    <th colspan="{{ $daysInMonth }}" class="border border-gray-400 p-2">Tanggal</th>
+                    <th colspan="4" class="border border-gray-400 p-2">Jumlah</th>
+                </tr>
+                <tr>
+                    @for ($i = 1; $i <= $daysInMonth; $i++)
+                    <th class="border border-gray-400 p-1 w-8">{{ $i }}</th>
+                    @endfor
+                    <th class="border border-gray-400 p-1">H</th>
+                    <th class="border border-gray-400 p-1">S</th>
+                    <th class="border border-gray-400 p-1">I</th>
+                    <th class="border border-gray-400 p-1">A</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php $no = 1; @endphp
+                @foreach($rekapData as $data)
+                <tr class="border-b">
+                    <td class="border border-gray-400 p-1">{{ $no++ }}</td>
+                    <td class="border border-gray-400 p-1 text-left">{{ $data['nama'] }}</td>
+                    @foreach($data['kehadiran'] as $status)
+                    <td class="border border-gray-400 p-1">{{ $status }}</td>
+                    @endforeach
+                    <td class="border border-gray-400 p-1 font-semibold">{{ $data['rekapSiswa']['H'] }}</td>
+                    <td class="border border-gray-400 p-1 font-semibold">{{ $data['rekapSiswa']['S'] }}</td>
+                    <td class="border border-gray-400 p-1 font-semibold">{{ $data['rekapSiswa']['I'] }}</td>
+                    <td class="border border-gray-400 p-1 font-semibold">{{ $data['rekapSiswa']['A'] }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        <a href="{{ route('absensi.index') }}"
        class="inline-flex items-center bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg shadow transition duration-200">
-      ← Kembali ke Daftar Absensi
+      ← Kembali 
     </a>
-  </div>
+    </div>
+    @else
+        <p class="text-center text-gray-500 mt-8">Silakan pilih kelas, bulan, dan tahun untuk menampilkan rekap absensi.</p>
+    @endif
 </div>
 @endsection

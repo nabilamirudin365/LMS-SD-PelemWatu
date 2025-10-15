@@ -86,36 +86,68 @@ class AbsensiController extends Controller
     public function rekapan(Request $request)
 {
     $kelas_id = $request->input('kelas_id');
-    $bulan = $request->input('bulan');
-    $tahun = $request->input('tahun');
+    $bulan = $request->input('bulan', Carbon::now()->month);
+    $tahun = $request->input('tahun', Carbon::now()->year);
 
     $kelasList = Kelas::all();
+    $rekapData = [];
+    $daysInMonth = 0;
 
-    $query = PresensiSiswa::with(['murid.kelas', 'absensi.kelas', 'absensi']);
+    if ($kelas_id && $bulan && $tahun) {
+        $daysInMonth = Carbon::createFromDate($tahun, $bulan)->daysInMonth;
 
-    if ($kelas_id) {
-        $query->whereHas('absensi', function ($q) use ($kelas_id) {
-            $q->where('kelas_id', $kelas_id);
-        });
+        $muridDiKelas = User::whereHas('kelas', function ($q) use ($kelas_id) {
+            $q->where('kelas.id', $kelas_id);
+        })->orderBy('name')->get();
+
+        // PERBAIKAN PADA LOGIKA PENGAMBILAN DATA PRESENSI
+        $presensi = PresensiSiswa::with('absensi')
+            ->whereHas('murid.kelas', function ($q) use ($kelas_id) {
+                // Pastikan presensi ini milik murid di kelas yg dipilih
+                $q->where('kelas.id', $kelas_id);
+            })
+            ->whereHas('absensi', function ($q) use ($bulan, $tahun) {
+                // Filter berdasarkan bulan dan tahun dari tabel absensi
+                $q->whereMonth('tanggal', $bulan)
+                  ->whereYear('tanggal', $tahun);
+            })->get();
+
+        // ... (Sisa dari logika foreach untuk mengolah data tetap sama)
+        foreach ($muridDiKelas as $murid) {
+            $kehadiran = [];
+            $rekapSiswa = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
+
+            for ($i = 1; $i <= $daysInMonth; $i++) {
+                $tanggalCek = Carbon::createFromDate($tahun, $bulan, $i)->format('Y-m-d');
+                $presensiHariIni = $presensi->first(function ($p) use ($murid, $tanggalCek) {
+                    return $p->murid_id == $murid->id && optional($p->absensi)->tanggal == $tanggalCek;
+                });
+                
+                $status = '-'; 
+                if ($presensiHariIni) {
+                    $status = strtoupper(substr($presensiHariIni->status, 0, 1));
+                    if (isset($rekapSiswa[$status])) {
+                        $rekapSiswa[$status]++;
+                    }
+                }
+                $kehadiran[$i] = $status;
+            }
+            $rekapData[$murid->id] = [
+                'nama' => $murid->name,
+                'kehadiran' => $kehadiran,
+                'rekapSiswa' => $rekapSiswa
+            ];
+        }
     }
 
-    if ($bulan && $tahun) {
-        $query->whereHas('absensi', function ($q) use ($bulan, $tahun) {
-            $q->whereMonth('tanggal', $bulan)
-              ->whereYear('tanggal', $tahun);
-        });
-    }
-
-    $rekapList = $query->orderByDesc('absensi_id')->get();
-
-    return view('guru.absensi_rekapan', compact('rekapList', 'kelasList', 'kelas_id', 'bulan', 'tahun'));
+    return view('guru.absensi_rekapan', compact('rekapData', 'kelasList', 'kelas_id', 'bulan', 'tahun', 'daysInMonth'));
 }
 
     public function export(Request $request)
 {
     $kelas_id = $request->input('kelas_id');
-    $bulan = $request->input('bulan');
-    $tahun = $request->input('tahun');
+    $bulan = $request->input('bulan', Carbon::now()->month);
+    $tahun = $request->input('tahun', Carbon::now()->year);
 
     $kelas = null;
     if ($kelas_id) {
@@ -125,7 +157,7 @@ class AbsensiController extends Controller
     $namaKelas = $kelas ? $kelas->nama_kelas : 'Semua-Kelas';
 
     // Format nama bulan Indonesia dari angka
-    $namaBulan = $bulan ? Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F') : 'Semua-Bulan';
+    $namaBulan = Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F');
     $fileName = 'rekap-absensi-' . $namaKelas . '-' . $namaBulan . '-' . $tahun . '.xlsx';
 
     return Excel::download(new RekapAbsensiExport($kelas_id, $bulan, $tahun), $fileName);

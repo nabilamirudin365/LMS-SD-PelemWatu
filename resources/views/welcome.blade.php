@@ -45,7 +45,7 @@
     <div class="container mx-auto px-6 py-4 flex justify-between items-center">
       <div class="flex items-center gap-3">
         <span class="bg-sky-500 p-2 rounded-lg text-white font-bold">🎓</span>
-        <h1 class="text-xl font-bold text-slate-800">LMS SD Ceria</h1>
+        <h1 class="text-xl font-bold text-slate-800">LMS UPT SD NEGERI 231 GRESIK</h1>
       </div>
       <a href="{{ route('login') }}" class="bg-sky-500 text-white px-5 py-2 rounded-lg font-semibold hover:bg-sky-600 transition-colors btn-hover-effect">
         Login Murid & Guru
@@ -58,20 +58,32 @@
       <div class="grid lg:grid-cols-2 gap-12 items-center">
         <div class="text-center lg:text-left">
           <h2 class="text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
-            Pendidikan Modern untuk Generasi Cemerlang
+            Pembelajaran Informatika Modern untuk Generasi Digital
           </h2>
-          <p class="mt-4 text-lg text-slate-600">
-            Platform pembelajaran digital kami dirancang untuk mendukung proses belajar mengajar yang interaktif, menyenangkan, dan efektif.
+          <p class="mt-4 text-lg text-slate-800">
+            Platform pembelajaran digital kami dirancang untuk mengembangkan kemampuan computational thinking, coding, dan literasi digital yang interaktif, menyenangkan, dan sesuai kurikulum terkini.
           </p>
           <a href="{{ route('login') }}" class="mt-8 inline-block bg-sky-500 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-sky-600 transition-colors">
             Masuk ke Kelas Digital
           </a>
         </div>
         <div>
-          <img src="https://images.unsplash.com/photo-1588075592446-265fd1e6e76f?q=80&w=2072&auto=format&fit=crop" alt="Siswa belajar di kelas" class="rounded-2xl shadow-xl">
+          <img src="{{ asset('images/gambarlabupt.jpg') }}" alt="Siswa belajar di UPT SD Negeri 231 Gresik" class="rounded-2xl shadow-xl">
         </div>
       </div>
     </section>
+
+    {{-- Latar Belakang Blur --}}
+<div class="fixed inset-0 -z-10">
+  {{-- Gambar Sekolah dengan Efek Blur --}}
+  <div 
+  class="absolute inset-0 bg-cover bg-center" 
+  style="background-image: url('{{ asset('images/bgsekolah.jpg') }}');">
+</div>
+
+  {{-- Lapisan Overlay untuk Keterbacaan --}}
+  <div class="absolute inset-0 bg-white/80"></div>
+</div>
 
     <section id="keunggulan" class="bg-white py-20">
       <div class="container mx-auto px-6 text-center">
